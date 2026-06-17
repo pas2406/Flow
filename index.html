@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Flow — application Kanban de gestion de tâches en JavaScript vanilla." />
+  <title>Flow — Kanban</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-logo" aria-hidden="true">≋</span>
+      <h1 class="brand-name">Flow</h1>
+      <span class="brand-tag">Kanban de tâches</span>
+    </div>
+
+    <!-- Statistiques d'avancement -->
+    <div class="stats" aria-live="polite">
+      <div class="stat" id="stat-total">
+        <span class="stat-value" data-stat="total">0</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat" id="stat-todo">
+        <span class="stat-value" data-stat="todo">0</span>
+        <span class="stat-label">À faire</span>
+      </div>
+      <div class="stat" id="stat-doing">
+        <span class="stat-value" data-stat="doing">0</span>
+        <span class="stat-label">En cours</span>
+      </div>
+      <div class="stat" id="stat-review">
+        <span class="stat-value" data-stat="review">0</span>
+        <span class="stat-label">En revue</span>
+      </div>
+      <div class="stat" id="stat-done">
+        <span class="stat-value" data-stat="done">0</span>
+        <span class="stat-label">Terminé</span>
+      </div>
+    </div>
+
+    <div class="progress-wrap" title="Pourcentage de tâches terminées">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <span class="progress-label" id="progress-label">0%</span>
+    </div>
+  </header>
+
+  <main class="board" id="board">
+    <!-- Les colonnes sont générées par app.js -->
+  </main>
+
+  <!-- Modèle d'une colonne (cloné par JS) -->
+  <template id="column-template">
+    <section class="column" data-column-id="">
+      <div class="column-header">
+        <h2 class="column-title"></h2>
+        <span class="column-count">0</span>
+      </div>
+      <div class="cards" data-dropzone></div>
+      <form class="add-form" autocomplete="off">
+        <input class="add-input" type="text" placeholder="Nouvelle tâche…" maxlength="200" aria-label="Nouvelle tâche" />
+        <select class="add-priority" aria-label="Priorité">
+          <option value="low">Basse</option>
+          <option value="medium" selected>Moyenne</option>
+          <option value="high">Haute</option>
+        </select>
+        <button class="add-btn" type="submit" aria-label="Ajouter la tâche">+</button>
+      </form>
+    </section>
+  </template>
+
+  <!-- Modèle d'une carte (cloné par JS) -->
+  <template id="card-template">
+    <article class="card" draggable="true">
+      <span class="card-priority" aria-hidden="true"></span>
+      <p class="card-text"></p>
+      <div class="card-actions">
+        <button class="card-edit" type="button" title="Modifier" aria-label="Modifier la tâche">✎</button>
+        <button class="card-delete" type="button" title="Supprimer" aria-label="Supprimer la tâche">×</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
