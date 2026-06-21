@@ -50,6 +50,14 @@
     </div>
   </header>
 
+  <nav class="projects-bar" aria-label="Projets">
+    <span class="projects-label">Projets</span>
+    <div class="project-tabs" id="project-tabs"></div>
+    <button class="project-add" id="project-add" type="button">
+      <span aria-hidden="true">+</span> Nouveau projet
+    </button>
+  </nav>
+
   <main class="board" id="board"></main>
 
   <template id="column-template">
@@ -91,7 +99,7 @@
 
   <div class="modal-overlay" id="modal-overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-text">
-      <div class="modal-icon" aria-hidden="true">↺</div>
+      <div class="modal-icon" id="modal-icon" aria-hidden="true">↺</div>
       <h3 class="modal-title" id="modal-title">Réinitialiser le Kanban ?</h3>
       <p class="modal-text" id="modal-text">Toutes les tâches seront définitivement supprimées. Cette action est irréversible.</p>
       <div class="modal-actions">
