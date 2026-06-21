@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Flow — application Kanban de gestion de tâches en JavaScript vanilla." />
-  <title>Flow — Kanban</title>
+  <title>Flow Kanban</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -14,57 +14,83 @@
       <h1 class="brand-name">Flow</h1>
       <span class="brand-tag">Kanban de tâches</span>
     </div>
-
-    <button class="reset-btn" id="reset-btn" type="button" title="Réinitialiser le Kanban">
-      <span aria-hidden="true">↺</span> Réinitialiser
-    </button>
-
-    <div class="stats" aria-live="polite">
-      <div class="stat" id="stat-total">
-        <span class="stat-value" data-stat="total">0</span>
-        <span class="stat-label">Total</span>
-      </div>
-      <div class="stat" id="stat-todo">
-        <span class="stat-value" data-stat="todo">0</span>
-        <span class="stat-label">À faire</span>
-      </div>
-      <div class="stat" id="stat-doing">
-        <span class="stat-value" data-stat="doing">0</span>
-        <span class="stat-label">En cours</span>
-      </div>
-      <div class="stat" id="stat-review">
-        <span class="stat-value" data-stat="review">0</span>
-        <span class="stat-label">En revue</span>
-      </div>
-      <div class="stat" id="stat-done">
-        <span class="stat-value" data-stat="done">0</span>
-        <span class="stat-label">Terminé</span>
-      </div>
-    </div>
-
-    <div class="progress-wrap" title="Pourcentage de tâches terminées">
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-      </div>
-      <span class="progress-label" id="progress-label">0%</span>
-    </div>
   </header>
 
-  <nav class="projects-bar" aria-label="Projets">
-    <span class="projects-label">Projets</span>
-    <div class="project-tabs" id="project-tabs"></div>
-    <button class="project-add" id="project-add" type="button">
-      <span aria-hidden="true">+</span> Nouveau projet
-    </button>
-  </nav>
+  <!-- ── Vue : liste des projets ─────────────────────────── -->
+  <section class="view view-projects" id="view-projects">
+    <header class="projects-hero">
+      <div class="projects-hero-text">
+        <h2 class="projects-hero-title">Mes projets</h2>
+        <p class="projects-hero-sub">
+          Chaque projet a son propre tableau Kanban. Créez-en un, ouvrez-le, puis
+          ajoutez vos tâches et personnalisez les étapes selon vos besoins.
+        </p>
+      </div>
+      <span class="projects-hero-badge" id="projects-count">0 projet</span>
+    </header>
 
-  <main class="board" id="board"></main>
+    <div class="projects-toolbar">
+      <div class="project-search">
+        <span class="project-search-icon" aria-hidden="true">⌕</span>
+        <input type="search" id="project-search-input" class="project-search-input"
+               placeholder="Rechercher un projet…" aria-label="Rechercher un projet" />
+      </div>
+      <button class="project-add" id="project-add" type="button">
+        <span aria-hidden="true">+</span> Nouveau projet
+      </button>
+      <button class="select-toggle" id="selection-toggle" type="button" aria-pressed="false">
+        <span aria-hidden="true">☑</span> Sélection
+      </button>
+    </div>
+
+    <div class="selection-bar" id="selection-bar" hidden>
+      <span class="selection-count" id="selection-count">Sélectionnez des projets</span>
+      <button class="selection-btn selection-all" id="selection-all" type="button">Tout sélectionner</button>
+      <button class="selection-btn selection-clear" id="selection-clear" type="button">Terminer</button>
+      <button class="selection-btn selection-delete" id="selection-delete" type="button">
+        <span aria-hidden="true">🗑</span> Supprimer la sélection
+      </button>
+    </div>
+
+    <div class="project-grid" id="project-grid"></div>
+  </section>
+
+  <!-- ── Vue : tableau Kanban d'un projet ────────────────── -->
+  <section class="view view-board" id="view-board" hidden>
+    <div class="board-toolbar">
+      <button class="back-btn" id="back-btn" type="button">
+        <span aria-hidden="true">←</span> Projets
+      </button>
+      <h2 class="board-title" id="board-title" title="Double-cliquer pour renommer">Projet</h2>
+
+      <div class="board-toolbar-right">
+        <div class="stats" aria-live="polite">
+          <div class="stat">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+        <div class="progress-wrap" title="Pourcentage de tâches dans la dernière étape">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+          </div>
+          <span class="progress-label" id="progress-label">0%</span>
+        </div>
+        <button class="reset-btn" id="reset-btn" type="button" title="Réinitialiser ce projet">
+          <span aria-hidden="true">↺</span> Réinitialiser
+        </button>
+      </div>
+    </div>
+
+    <main class="board" id="board"></main>
+  </section>
 
   <template id="column-template">
     <section class="column" data-column-id="">
       <div class="column-header">
-        <h2 class="column-title"></h2>
+        <h2 class="column-title" title="Double-cliquer pour renommer"></h2>
         <span class="column-count">0</span>
+        <button class="column-del" type="button" title="Supprimer l'étape" aria-label="Supprimer l'étape">×</button>
       </div>
       <div class="cards" data-dropzone></div>
       <form class="add-form" autocomplete="off">
@@ -86,7 +112,7 @@
     </section>
   </template>
 
-    <template id="card-template">
+  <template id="card-template">
     <article class="card" draggable="true">
       <span class="card-priority" aria-hidden="true"></span>
       <p class="card-text"></p>
@@ -100,8 +126,8 @@
   <div class="modal-overlay" id="modal-overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-text">
       <div class="modal-icon" id="modal-icon" aria-hidden="true">↺</div>
-      <h3 class="modal-title" id="modal-title">Réinitialiser le Kanban ?</h3>
-      <p class="modal-text" id="modal-text">Toutes les tâches seront définitivement supprimées. Cette action est irréversible.</p>
+      <h3 class="modal-title" id="modal-title">Confirmer ?</h3>
+      <p class="modal-text" id="modal-text"></p>
       <div class="modal-actions">
         <button class="modal-btn modal-cancel" id="modal-cancel" type="button">Annuler</button>
         <button class="modal-btn modal-confirm" id="modal-confirm" type="button">Continuer</button>
