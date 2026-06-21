@@ -657,7 +657,7 @@
     renderCards();
   }
 
-  function editCard(id, newText) {
+  function editCard(id, newText, priority) {
     const card = getCard(id);
     if (!card) return;
     const clean = newText.trim();
@@ -666,6 +666,7 @@
       return;
     }
     card.text = clean;
+    if (priority && PRIORITIES.includes(priority)) card.priority = priority;
     save();
     renderCards();
   }
@@ -861,6 +862,7 @@
 
   // ── Glisser-déposer ─────────────────────────────────────
   let draggedId = null;
+  let draggedColumnId = null;
 
   function getCardAfter(container, y) {
     const cards = [...container.querySelectorAll(".card:not(.dragging)")];
@@ -877,6 +879,7 @@
 
   function setupDropzone(dropzone, columnId) {
     dropzone.addEventListener("dragover", function (e) {
+      if (!draggedId) return; // ignore le glissement d'étape
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       dropzone.classList.add("drag-over");
@@ -899,6 +902,23 @@
   }
 
   board.addEventListener("dragstart", function (e) {
+    // Réordonnement d'étape (depuis l'en-tête de la colonne).
+    const header = e.target.closest(".column-header");
+    if (header) {
+      // Ne pas glisser quand on édite le titre.
+      if (e.target.closest('[contenteditable="true"]')) {
+        e.preventDefault();
+        return;
+      }
+      const column = header.closest(".column");
+      draggedColumnId = column.dataset.columnId;
+      column.classList.add("col-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      try { e.dataTransfer.setData("text/plain", draggedColumnId); } catch (_) {}
+      try { e.dataTransfer.setDragImage(column, 24, 24); } catch (_) {}
+      return;
+    }
+    // Déplacement de tâche.
     const card = e.target.closest(".card");
     if (!card) return;
     draggedId = card.dataset.cardId;
@@ -911,7 +931,67 @@
     const card = e.target.closest(".card");
     if (card) card.classList.remove("dragging");
     draggedId = null;
+    draggedColumnId = null;
+    clearColumnIndicators();
+    board.querySelectorAll(".col-dragging").forEach((c) => c.classList.remove("col-dragging"));
     document.querySelectorAll(".cards.drag-over").forEach((z) => z.classList.remove("drag-over"));
+  });
+
+  // ── Réordonnement des étapes ────────────────────────────
+  function clearColumnIndicators() {
+    board.querySelectorAll(".col-drop-before").forEach((c) => c.classList.remove("col-drop-before"));
+  }
+
+  function getColumnAfter(x) {
+    const cols = [...board.querySelectorAll(".column:not(.col-dragging)")];
+    let closest = { offset: Number.NEGATIVE_INFINITY, id: null };
+    for (const col of cols) {
+      const box = col.getBoundingClientRect();
+      const offset = x - box.left - box.width / 2;
+      if (offset < 0 && offset > closest.offset) {
+        closest = { offset: offset, id: col.dataset.columnId };
+      }
+    }
+    return closest.id;
+  }
+
+  function moveColumn(id, beforeId) {
+    const proj = activeProject();
+    if (!proj || id === beforeId) return;
+    const idx = proj.columns.findIndex((c) => c.id === id);
+    if (idx === -1) return;
+    const [col] = proj.columns.splice(idx, 1);
+    if (beforeId) {
+      const bi = proj.columns.findIndex((c) => c.id === beforeId);
+      if (bi !== -1) {
+        proj.columns.splice(bi, 0, col);
+        save();
+        renderBoard();
+        return;
+      }
+    }
+    proj.columns.push(col);
+    save();
+    renderBoard();
+  }
+
+  board.addEventListener("dragover", function (e) {
+    if (!draggedColumnId) return; // seulement pour les étapes
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    clearColumnIndicators();
+    const beforeId = getColumnAfter(e.clientX);
+    if (beforeId) {
+      const el = board.querySelector('[data-column-id="' + beforeId + '"]');
+      if (el) el.classList.add("col-drop-before");
+    }
+  });
+
+  board.addEventListener("drop", function (e) {
+    if (!draggedColumnId) return;
+    e.preventDefault();
+    const beforeId = getColumnAfter(e.clientX);
+    moveColumn(draggedColumnId, beforeId);
   });
 
   board.addEventListener("click", function (e) {
@@ -931,6 +1011,7 @@
   function startEditing(cardEl, id) {
     const p = cardEl.querySelector(".card-text");
     cardEl.setAttribute("draggable", "false");
+    cardEl.classList.add("editing");
     p.setAttribute("contenteditable", "true");
     p.focus();
 
@@ -941,13 +1022,43 @@
     sel.removeAllRanges();
     sel.addRange(range);
 
+    // Sélecteur de priorité affiché pendant l'édition.
+    let chosenPriority = cardEl.dataset.priority || "medium";
+    const picker = document.createElement("div");
+    picker.className = "card-prio-edit";
+    [
+      ["high", "Haute"],
+      ["medium", "Moyenne"],
+      ["low", "Basse"],
+    ].forEach(function (pair) {
+      const val = pair[0];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "card-prio-opt" + (val === chosenPriority ? " active" : "");
+      btn.title = "Priorité " + pair[1];
+      btn.innerHTML = '<span class="card-prio-dot" data-prio="' + val + '"></span>' + pair[1];
+      // mousedown preventDefault : garde le focus sur le texte (pas de blur prématuré).
+      btn.addEventListener("mousedown", function (ev) { ev.preventDefault(); });
+      btn.addEventListener("click", function () {
+        chosenPriority = val;
+        cardEl.dataset.priority = val; // aperçu immédiat (bord coloré)
+        picker.querySelectorAll(".card-prio-opt").forEach(function (o) {
+          o.classList.toggle("active", o === btn);
+        });
+      });
+      picker.appendChild(btn);
+    });
+    cardEl.appendChild(picker);
+
     function finish(saveChanges) {
       p.removeEventListener("blur", onBlur);
       p.removeEventListener("keydown", onKey);
       p.removeAttribute("contenteditable");
       cardEl.setAttribute("draggable", "true");
+      cardEl.classList.remove("editing");
+      picker.remove();
       if (saveChanges) {
-        editCard(id, p.textContent);
+        editCard(id, p.textContent, chosenPriority);
       } else {
         renderCards();
       }
