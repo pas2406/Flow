@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Flow — application Kanban de gestion de tâches en JavaScript vanilla." />
   <title>Flow Kanban</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -90,6 +91,7 @@
       <div class="column-header">
         <h2 class="column-title" title="Double-cliquer pour renommer"></h2>
         <span class="column-count">0</span>
+        <button class="column-edit" type="button" title="Renommer l'étape" aria-label="Renommer l'étape">✎</button>
         <button class="column-del" type="button" title="Supprimer l'étape" aria-label="Supprimer l'étape">×</button>
       </div>
       <div class="cards" data-dropzone></div>

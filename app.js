@@ -732,6 +732,11 @@
       startRenameColumn(titleEl, col.id);
     });
 
+    const edit = node.querySelector(".column-edit");
+    edit.addEventListener("click", function () {
+      startRenameColumn(titleEl, col.id);
+    });
+
     const del = node.querySelector(".column-del");
     if (single) {
       del.remove();
