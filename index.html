@@ -15,7 +15,10 @@
       <span class="brand-tag">Kanban de tâches</span>
     </div>
 
-    <!-- Statistiques d'avancement -->
+    <button class="reset-btn" id="reset-btn" type="button" title="Réinitialiser le Kanban">
+      <span aria-hidden="true">↺</span> Réinitialiser
+    </button>
+
     <div class="stats" aria-live="polite">
       <div class="stat" id="stat-total">
         <span class="stat-value" data-stat="total">0</span>
@@ -47,11 +50,8 @@
     </div>
   </header>
 
-  <main class="board" id="board">
-    <!-- Les colonnes sont générées par app.js -->
-  </main>
+  <main class="board" id="board"></main>
 
-  <!-- Modèle d'une colonne (cloné par JS) -->
   <template id="column-template">
     <section class="column" data-column-id="">
       <div class="column-header">
@@ -61,18 +61,24 @@
       <div class="cards" data-dropzone></div>
       <form class="add-form" autocomplete="off">
         <input class="add-input" type="text" placeholder="Nouvelle tâche…" maxlength="200" aria-label="Nouvelle tâche" />
-        <select class="add-priority" aria-label="Priorité">
-          <option value="low">Basse</option>
-          <option value="medium" selected>Moyenne</option>
-          <option value="high">Haute</option>
-        </select>
+        <div class="prio-select" data-value="medium">
+          <button class="prio-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Priorité">
+            <span class="prio-dot" data-prio="medium"></span>
+            <span class="prio-label">Moyenne</span>
+            <span class="prio-caret" aria-hidden="true">▾</span>
+          </button>
+          <ul class="prio-options" role="listbox">
+            <li class="prio-option" role="option" data-value="high"   data-label="Haute"   aria-selected="false"><span class="prio-dot" data-prio="high"></span>Haute</li>
+            <li class="prio-option" role="option" data-value="medium" data-label="Moyenne" aria-selected="true"><span class="prio-dot" data-prio="medium"></span>Moyenne</li>
+            <li class="prio-option" role="option" data-value="low"    data-label="Basse"   aria-selected="false"><span class="prio-dot" data-prio="low"></span>Basse</li>
+          </ul>
+        </div>
         <button class="add-btn" type="submit" aria-label="Ajouter la tâche">+</button>
       </form>
     </section>
   </template>
 
-  <!-- Modèle d'une carte (cloné par JS) -->
-  <template id="card-template">
+    <template id="card-template">
     <article class="card" draggable="true">
       <span class="card-priority" aria-hidden="true"></span>
       <p class="card-text"></p>
@@ -82,6 +88,18 @@
       </div>
     </article>
   </template>
+
+  <div class="modal-overlay" id="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-text">
+      <div class="modal-icon" aria-hidden="true">↺</div>
+      <h3 class="modal-title" id="modal-title">Réinitialiser le Kanban ?</h3>
+      <p class="modal-text" id="modal-text">Toutes les tâches seront définitivement supprimées. Cette action est irréversible.</p>
+      <div class="modal-actions">
+        <button class="modal-btn modal-cancel" id="modal-cancel" type="button">Annuler</button>
+        <button class="modal-btn modal-confirm" id="modal-confirm" type="button">Continuer</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
